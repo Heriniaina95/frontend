@@ -8,6 +8,7 @@ const App = () => {
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedContinent, setSelectedContinent] = useState('');
+  const [environmentSurvey, setEnvironmentSurvey] = useState({});
   const [predictedDisease, setPredictedDisease] = useState('');
   const [imagePrediction, setImagePrediction] = useState(null);
 
@@ -16,11 +17,6 @@ const App = () => {
     axios.get('http://localhost:5000/symptoms')
       .then(response => setSymptoms(response.data.symptoms))
       .catch(error => console.error('Erreur lors du chargement des symptômes:', error));
-
-    // Récupérer les pays
-    axios.get('http://localhost:5000/countries')
-      .then(response => setCountries(response.data.countries))
-      .catch(error => console.error('Erreur lors du chargement des pays:', error));
 
     // Récupérer les continents
     axios.get('http://localhost:5000/continents')
@@ -33,9 +29,10 @@ const App = () => {
   };
 
   const handleContinentChange = (event) => {
-    setSelectedContinent(event.target.value);
+    const selectedContinent = event.target.value;
+    setSelectedContinent(selectedContinent);
     // Récupérer les pays du continent sélectionné
-    axios.post('http://localhost:5000/countries', { continent: event.target.value })
+    axios.post('http://localhost:5000/countries-by-continent', { continent: selectedContinent })
       .then(response => setCountries(response.data.countries))
       .catch(error => console.error('Erreur lors du chargement des pays:', error));
   };
@@ -44,16 +41,29 @@ const App = () => {
     setSelectedCountry(event.target.value);
   };
 
-  const handlePredictDisease = () => {
-    const data = {
-      symptoms: Object.values(selectedSymptoms),
-      country: selectedCountry,
-      environment: '' // Vous pouvez ajouter l'environnement ici si nécessaire
-    };
+  const handleEnvironmentSurveyChange = (event) => {
+    const { name, value } = event.target;
+    setEnvironmentSurvey(prev => ({ ...prev, [name]: value }));
+  };
 
-    axios.post('http://localhost:5000/predict-disease', data)
-      .then(response => setPredictedDisease(response.data.predicted_disease))
-      .catch(error => console.error('Erreur lors de la prédiction de la maladie:', error));
+  const handlePredictDisease = () => {
+    // Prédire l'environnement à partir du questionnaire
+    axios.post('http://localhost:5000/predict-environment-survey', environmentSurvey)
+      .then(response => {
+        const predictedEnvironment = response.data.predicted_environment;
+
+        // Prédire la maladie avec les symptômes, le pays et l'environnement prédit
+        const data = {
+          symptoms: Object.values(selectedSymptoms),
+          country: selectedCountry,
+          environment: predictedEnvironment
+        };
+
+        axios.post('http://localhost:5000/predict-disease', data)
+          .then(response => setPredictedDisease(response.data.predicted_disease))
+          .catch(error => console.error('Erreur lors de la prédiction de la maladie:', error));
+      })
+      .catch(error => console.error('Erreur lors de la prédiction de l\'environnement:', error));
   };
 
   const handleImageUpload = (event) => {
@@ -72,7 +82,7 @@ const App = () => {
 
   return (
     <div className="App">
-      <h1>Diagnostic de Patient</h1>
+      <h1>Évaluation Intelligente des Maladies Tropicales</h1>
       <div>
         <h2>Sélectionnez vos symptômes</h2>
         {Object.keys(symptoms).map(symptom => (
@@ -112,7 +122,59 @@ const App = () => {
         </select>
       </div>
       <div>
-        <h2>Téléchargez une image</h2>
+        <h2>Questionnaire Environnemental</h2>
+        {/* Exemple de questions, remplacez par vos questions réelles */}
+        <div>
+          <label>Type de Logement</label>
+          <select name="Question 1" onChange={handleEnvironmentSurveyChange}>
+            <option value="">Sélectionnez une réponse</option>
+            <option value="Réponse 1">Habitation précaire ou insalubre</option>
+            <option value="Réponse 2">Logement rural</option>
+            <option value="Réponse 3">Logement urbain</option>
+            {/* Ajoutez d'autres réponses possibles */}
+          </select>
+        </div>
+        <div>
+          <label>Proximité de l'Eau</label>
+          <select name="Question 2" onChange={handleEnvironmentSurveyChange}>
+            <option value="">Sélectionnez une réponse</option>
+            <option value="Réponse 1">oui</option>
+            <option value="Réponse 2">non</option>
+            {/* Ajoutez d'autres réponses possibles */}
+          </select>
+        </div>
+        <div>
+          <label>Environnement Naturel</label>
+          <select name="Question 3" onChange={handleEnvironmentSurveyChange}>
+            <option value="">Sélectionnez une réponse</option>
+            <option value="Réponse 1">oui</option>
+            <option value="Réponse 2">non</option>
+            {/* Ajoutez d'autres réponses possibles */}
+          </select>
+        </div>
+        <div>
+          <label>Conditions Sanitaires</label>
+          <select name="Question 4" onChange={handleEnvironmentSurveyChange}>
+            <option value="">Sélectionnez une réponse</option>
+            <option value="Réponse 1">Mauvaises</option>
+            <option value="Réponse 2">Moyennes</option>
+            <option value="Réponse 3">Bonnes</option>
+            {/* Ajoutez d'autres réponses possibles */}
+          </select>
+        </div>
+        <div>
+          <label>Présence d'Animaux</label>
+          <select name="Question 5" onChange={handleEnvironmentSurveyChange}>
+            <option value="">Sélectionnez une réponse</option>
+            <option value="Réponse 1">oui</option>
+            <option value="Réponse 2">non</option>
+            {/* Ajoutez d'autres réponses possibles */}
+          </select>
+        </div>
+        {/* Ajoutez d'autres questions ici */}
+      </div>
+      <div>
+        <h2>Téléchargez une image : Image d'inféction sur votre peau</h2>
         <input type="file" onChange={handleImageUpload} />
       </div>
       <button onClick={handlePredictDisease}>Prédire la maladie</button>
