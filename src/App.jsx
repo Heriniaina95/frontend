@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
@@ -9,6 +9,48 @@ const App = () => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showSymptomForm, setShowSymptomForm] = useState(false);
+  const [symptomsList, setSymptomsList] = useState({});
+  const [continents, setContinents] = useState([]);
+  const [countriesList, setCountriesList] = useState([]);
+  const [selectedSymptoms, setSelectedSymptoms] = useState({});
+  const [selectedContinent, setSelectedContinent] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [symptomPrediction, setSymptomPrediction] = useState(null);
+
+  useEffect(() => {
+    // Récupérer les symptômes et les continents depuis le backend
+    const fetchSymptomsAndContinents = async () => {
+      try {
+        const [symptomsResponse, continentsResponse] = await Promise.all([
+          axios.get('http://localhost:5000/symptoms'),
+          axios.get('http://localhost:5000/continents')
+        ]);
+        setSymptomsList(symptomsResponse.data.symptoms);
+        setContinents(continentsResponse.data.continents);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des symptômes ou des continents:", err);
+      }
+    };
+
+    fetchSymptomsAndContinents();
+  }, []);
+
+  useEffect(() => {
+    // Récupérer les pays pour le continent sélectionné
+    if (selectedContinent) {
+      const fetchCountries = async () => {
+        try {
+          const response = await axios.get(`http://localhost:5000/countries?continent=${selectedContinent}`);
+          setCountriesList(response.data.countries);
+        } catch (err) {
+          console.error("Erreur lors de la récupération des pays:", err);
+        }
+      };
+
+      fetchCountries();
+    }
+  }, [selectedContinent]);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -18,6 +60,8 @@ const App = () => {
       setImagePrediction(null);
       setDiseaseInfo(null);
       setError(null);
+      setShowSymptomForm(false);
+      setSymptomPrediction(null);
     }
   };
 
@@ -48,6 +92,47 @@ const App = () => {
       setLoading(false);
     }
   };
+
+  const handleSymptomChange = (key, event) => {
+    const { value } = event.target;
+    setSelectedSymptoms((prevSymptoms) => ({
+      ...prevSymptoms,
+      [key]: value
+    }));
+  };
+
+  const handleContinentChange = (event) => {
+    setSelectedContinent(event.target.value);
+    setSelectedCountry('');
+  };
+
+  const handleCountryChange = (event) => {
+    setSelectedCountry(event.target.value);
+  };
+
+  const handlePredictSymptoms = async () => {
+    setLoading(true);
+    setError(null);
+  
+    const symptomsArray = Object.values(selectedSymptoms);
+    const country = selectedCountry;
+  
+    console.log("Symptoms Array:", symptomsArray); // Add this line to check symptomsArray
+    console.log("Selected Country:", country); // Add this line to check selectedCountry
+  
+    try {
+      const response = await axios.post('http://localhost:5173/node_modules/.vite/deps/axios.js?v=2683a313:380:18', {
+        symptoms: symptomsArray,
+        country: country
+      });
+      setSymptomPrediction(response.data.predicted_disease);
+    } catch (err) {
+      setError("Error during symptom prediction. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };  
 
   return (
     <div className="App">
@@ -83,7 +168,7 @@ const App = () => {
               <h4>Description :</h4>
               <p>{diseaseInfo.description}</p>
               <h4>Symptômes :</h4>
-              <p>{diseaseInfo.symptoms}</p> {/* Afficher les symptômes ici */}
+              <p>{diseaseInfo.symptoms}</p>
               <h4>Pays concernés :</h4>
               <ul>
                 {diseaseInfo.countries.split(',').map((country, index) => (
@@ -94,6 +179,62 @@ const App = () => {
               <p>{diseaseInfo.favorableEnvironment}</p>
             </div>
           )}
+          <button onClick={() => setShowSymptomForm(true)} className="btn-more-details">
+            Plus précis
+          </button>
+        </div>
+      )}
+
+      {showSymptomForm && (
+        <div className="symptom-form">
+          <h3>Prédiction par symptômes et pays</h3>
+          {Object.keys(symptomsList).map((key, index) => (
+            <div key={index}>
+              <label>{`Symptôme ${index + 1} :`}</label>
+              <select onChange={(event) => handleSymptomChange(key, event)} value={selectedSymptoms[key] || ''}>
+                <option value="">Sélectionnez un symptôme</option>
+                {symptomsList[key].map((symptomOption, idx) => (
+                  <option key={idx} value={symptomOption}>
+                    {symptomOption}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+          <div>
+            <label htmlFor="continent-select">Continent :</label>
+            <select id="continent-select" onChange={handleContinentChange} value={selectedContinent}>
+              <option value="">Sélectionnez un continent</option>
+              {Object.keys(continents).map((continent, index) => (
+                <option key={index} value={continent}>
+                  {continent}
+                </option>
+              ))}
+            </select>
+          </div>
+          {selectedContinent && (
+            <div>
+              <label htmlFor="country-select">Pays :</label>
+              <select id="country-select" onChange={handleCountryChange} value={selectedCountry}>
+                <option value="">Sélectionnez un pays</option>
+                {countriesList.map((country, index) => (
+                  <option key={index} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <button onClick={handlePredictSymptoms} className="btn-predict" disabled={loading}>
+            {loading ? 'Analyse en cours...' : 'Prédire la maladie'}
+          </button>
+        </div>
+      )}
+
+      {symptomPrediction && (
+        <div className="result">
+          <h3>Prédiction par symptômes :</h3>
+          <p>{symptomPrediction}</p>
         </div>
       )}
     </div>
