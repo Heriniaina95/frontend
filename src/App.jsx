@@ -11,46 +11,22 @@ const App = () => {
   const [error, setError] = useState(null);
   const [showSymptomForm, setShowSymptomForm] = useState(false);
   const [symptomsList, setSymptomsList] = useState({});
-  const [continents, setContinents] = useState([]);
-  const [countriesList, setCountriesList] = useState([]);
   const [selectedSymptoms, setSelectedSymptoms] = useState({});
-  const [selectedContinent, setSelectedContinent] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState('');
   const [symptomPrediction, setSymptomPrediction] = useState(null);
 
   useEffect(() => {
-    // Récupérer les symptômes et les continents depuis le backend
-    const fetchSymptomsAndContinents = async () => {
+    // Récupérer les symptômes depuis le backend
+    const fetchSymptoms = async () => {
       try {
-        const [symptomsResponse, continentsResponse] = await Promise.all([
-          axios.get('http://localhost:5000/symptoms'),
-          axios.get('http://localhost:5000/continents')
-        ]);
-        setSymptomsList(symptomsResponse.data.symptoms);
-        setContinents(continentsResponse.data.continents);
+        const response = await axios.get('http://localhost:5000/symptoms');
+        setSymptomsList(response.data.symptoms);
       } catch (err) {
-        console.error("Erreur lors de la récupération des symptômes ou des continents:", err);
+        console.error("Erreur lors de la récupération des symptômes:", err);
       }
     };
 
-    fetchSymptomsAndContinents();
+    fetchSymptoms();
   }, []);
-
-  useEffect(() => {
-    // Récupérer les pays pour le continent sélectionné
-    if (selectedContinent) {
-      const fetchCountries = async () => {
-        try {
-          const response = await axios.get(`http://localhost:5000/countries?continent=${selectedContinent}`);
-          setCountriesList(response.data.countries);
-        } catch (err) {
-          console.error("Erreur lors de la récupération des pays:", err);
-        }
-      };
-
-      fetchCountries();
-    }
-  }, [selectedContinent]);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -101,29 +77,17 @@ const App = () => {
     }));
   };
 
-  const handleContinentChange = (event) => {
-    setSelectedContinent(event.target.value);
-    setSelectedCountry('');
-  };
-
-  const handleCountryChange = (event) => {
-    setSelectedCountry(event.target.value);
-  };
-
   const handlePredictSymptoms = async () => {
     setLoading(true);
     setError(null);
-  
+
     const symptomsArray = Object.values(selectedSymptoms);
-    const country = selectedCountry;
   
     console.log("Symptoms Array:", symptomsArray); // Add this line to check symptomsArray
-    console.log("Selected Country:", country); // Add this line to check selectedCountry
   
     try {
       const response = await axios.post('http://localhost:5173/node_modules/.vite/deps/axios.js?v=2683a313:380:18', {
-        symptoms: symptomsArray,
-        country: country
+        symptoms: symptomsArray
       });
       setSymptomPrediction(response.data.predicted_disease);
     } catch (err) {
@@ -187,7 +151,7 @@ const App = () => {
 
       {showSymptomForm && (
         <div className="symptom-form">
-          <h3>Prédiction par symptômes et pays</h3>
+          <h3>Prédiction par symptômes</h3>
           {Object.keys(symptomsList).map((key, index) => (
             <div key={index}>
               <label>{`Symptôme ${index + 1} :`}</label>
@@ -201,30 +165,6 @@ const App = () => {
               </select>
             </div>
           ))}
-          <div>
-            <label htmlFor="continent-select">Continent :</label>
-            <select id="continent-select" onChange={handleContinentChange} value={selectedContinent}>
-              <option value="">Sélectionnez un continent</option>
-              {Object.keys(continents).map((continent, index) => (
-                <option key={index} value={continent}>
-                  {continent}
-                </option>
-              ))}
-            </select>
-          </div>
-          {selectedContinent && (
-            <div>
-              <label htmlFor="country-select">Pays :</label>
-              <select id="country-select" onChange={handleCountryChange} value={selectedCountry}>
-                <option value="">Sélectionnez un pays</option>
-                {countriesList.map((country, index) => (
-                  <option key={index} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
           <button onClick={handlePredictSymptoms} className="btn-predict" disabled={loading}>
             {loading ? 'Analyse en cours...' : 'Prédire la maladie'}
           </button>
