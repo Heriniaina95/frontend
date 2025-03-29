@@ -3,45 +3,36 @@ import axios from 'axios';
 import './App.css';
 
 const App = () => {
-  const [imagePrediction, setImagePrediction] = useState(null);
-  const [diseaseInfo, setDiseaseInfo] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [symptoms, setSymptoms] = useState([]);
+  const [prediction, setPrediction] = useState(null);
+  const [diseaseInfo, setDiseaseInfo] = useState(null);
+  const [symptomList, setSymptomList] = useState([]);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showSymptomForm, setShowSymptomForm] = useState(false);
-  const [symptomsList, setSymptomsList] = useState({});
-  const [selectedSymptoms, setSelectedSymptoms] = useState({});
-  const [symptomPrediction, setSymptomPrediction] = useState(null);
+  const [showSymptomSelection, setShowSymptomSelection] = useState(false);
 
-  useEffect(() => {
-    // Récupérer les symptômes depuis le backend
-    const fetchSymptoms = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/symptoms');
-        setSymptomsList(response.data.symptoms);
-      } catch (err) {
-        console.error("Erreur lors de la récupération des symptômes:", err);
-      }
-    };
-
-    fetchSymptoms();
-  }, []);
-
-  const handleImageUpload = (event) => {
+  const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setSelectedFile(file);
       setPreview(URL.createObjectURL(file));
-      setImagePrediction(null);
+      setPrediction(null);
       setDiseaseInfo(null);
       setError(null);
-      setShowSymptomForm(false);
-      setSymptomPrediction(null);
+      setShowSymptomSelection(false); // Réinitialiser l'affichage des symptômes
     }
   };
 
-  const handlePredictImage = async () => {
+  const handleSymptomChange = (event) => {
+    const { value, checked } = event.target;
+    setSymptoms((prevSymptoms) =>
+      checked ? [...prevSymptoms, value] : prevSymptoms.filter((symptom) => symptom !== value)
+    );
+  };
+
+  const handleImageUpload = async () => {
     if (!selectedFile) {
       setError("Veuillez sélectionner une image.");
       return;
@@ -56,10 +47,10 @@ const App = () => {
     try {
       const response = await axios.post('http://localhost:5000/upload-image', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      setImagePrediction(response.data.image_prediction);
+      setPrediction(response.data.image_prediction);
       setDiseaseInfo(response.data.disease_info);
     } catch (err) {
       setError("Erreur lors de l'upload de l'image. Veuillez réessayer.");
@@ -69,34 +60,28 @@ const App = () => {
     }
   };
 
-  const handleSymptomChange = (key, event) => {
-    const { value } = event.target;
-    setSelectedSymptoms((prevSymptoms) => ({
-      ...prevSymptoms,
-      [key]: value
-    }));
+  const handlePredictDisease = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/predict-disease', { symptoms });
+      setPrediction(response.data.predicted_disease);
+      setDiseaseInfo(null); // Réinitialiser les informations de la maladie
+    } catch (error) {
+      console.error('Erreur lors de la prédiction de la maladie:', error);
+    }
   };
 
-  const handlePredictSymptoms = async () => {
-    setLoading(true);
-    setError(null);
-
-    const symptomsArray = Object.values(selectedSymptoms);
-  
-    console.log("Symptoms Array:", symptomsArray); // Add this line to check symptomsArray
-  
+  const fetchSymptoms = async () => {
     try {
-      const response = await axios.post('http://localhost:5173/node_modules/.vite/deps/axios.js?v=2683a313:380:18', {
-        symptoms: symptomsArray
-      });
-      setSymptomPrediction(response.data.predicted_disease);
-    } catch (err) {
-      setError("Error during symptom prediction. Please try again.");
-      console.error(err);
-    } finally {
-      setLoading(false);
+      const response = await axios.get('http://localhost:5000/symptoms');
+      setSymptomList(response.data.symptoms);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des symptômes:', error);
     }
-  };  
+  };
+
+  useEffect(() => {
+    fetchSymptoms();
+  }, []);
 
   return (
     <div className="App">
@@ -104,7 +89,7 @@ const App = () => {
       <h1>TropiCare : Diagnostic Assisté par IA pour les Maladies Infectieuses Tropicales</h1>
 
       <div className="introduction">
-        <h2>Un diagnostic rapide et accessible </h2>
+        <h2>Un diagnostic rapide et accessible</h2>
         <p>
           Notre plateforme utilise l’intelligence artificielle pour analyser des images médicales et aider les professionnels de santé à
           diagnostiquer des maladies tropicales comme le <strong>paludisme, la dengue, la fièvre hémorragique, la fièvre jaune, le chikungunya,
@@ -115,18 +100,18 @@ const App = () => {
 
       <div className="section">
         <h2>Téléchargez une image</h2>
-        <input type="file" accept="image/*" onChange={handleImageUpload} className="form-control" />
+        <input type="file" accept="image/*" onChange={handleFileChange} className="form-control" />
         {preview && <img src={preview} alt="Aperçu" className="image-preview" />}
-        <button onClick={handlePredictImage} className="btn-predict" disabled={loading}>
+        <button onClick={handleImageUpload} className="btn-predict" disabled={loading}>
           {loading ? 'Analyse en cours...' : 'Prédire la maladie'}
         </button>
       </div>
 
       {error && <p className="error-message">{error}</p>}
-      {imagePrediction && (
+      {prediction && (
         <div className="result">
           <h3>Prédiction par image :</h3>
-          <p>{imagePrediction}</p>
+          <p>{prediction}</p>
           {diseaseInfo && (
             <div className="disease-info">
               <h4>Description :</h4>
@@ -143,38 +128,26 @@ const App = () => {
               <p>{diseaseInfo.favorableEnvironment}</p>
             </div>
           )}
-          <button onClick={() => setShowSymptomForm(true)} className="btn-more-details">
+          <button onClick={() => setShowSymptomSelection(true)} className="btn-more-details">
             Plus précis
           </button>
         </div>
       )}
 
-      {showSymptomForm && (
-        <div className="symptom-form">
-          <h3>Prédiction par symptômes</h3>
-          {Object.keys(symptomsList).map((key, index) => (
-            <div key={index}>
-              <label>{`Symptôme ${index + 1} :`}</label>
-              <select onChange={(event) => handleSymptomChange(key, event)} value={selectedSymptoms[key] || ''}>
-                <option value="">Sélectionnez un symptôme</option>
-                {symptomsList[key].map((symptomOption, idx) => (
-                  <option key={idx} value={symptomOption}>
-                    {symptomOption}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {showSymptomSelection && (
+        <div className="section">
+          <h2>Entrer les Symptômes</h2>
+          {symptomList.map((symptom) => (
+            <label key={symptom}>
+              <input
+                type="checkbox"
+                value={symptom}
+                onChange={handleSymptomChange}
+              />
+              {symptom}
+            </label>
           ))}
-          <button onClick={handlePredictSymptoms} className="btn-predict" disabled={loading}>
-            {loading ? 'Analyse en cours...' : 'Prédire la maladie'}
-          </button>
-        </div>
-      )}
-
-      {symptomPrediction && (
-        <div className="result">
-          <h3>Prédiction par symptômes :</h3>
-          <p>{symptomPrediction}</p>
+          <button onClick={handlePredictDisease} className="btn-predict">Prédire la maladie</button>
         </div>
       )}
     </div>
