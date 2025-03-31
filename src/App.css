@@ -1,9 +1,10 @@
 .App {
-  font-family: Arial, sans-serif;
+  font-family: 'Poppins', sans-serif;
   color: #333;
   padding: 20px;
   position: relative;
   overflow: hidden;
+  background-color: #f4f7fc;
 }
 
 .background-image {
@@ -14,7 +15,7 @@
   height: 100%;
   background: url('/background.jpg') no-repeat center center;
   background-size: cover;
-  opacity: 0.3;
+  opacity: 0.2;
   z-index: -1;
 }
 
@@ -22,10 +23,15 @@ h1 {
   color: #28a745;
   text-align: center;
   margin-bottom: 20px;
+  font-size: 2rem;
 }
 
 .section {
   margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .form-group {
@@ -40,42 +46,69 @@ label {
 
 .form-control {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   box-sizing: border-box;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .btn-predict {
   background-color: #007bff;
   color: white;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
 .btn-predict:hover {
   background-color: #0056b3;
+  transform: scale(1.05);
 }
 
 .result {
   margin-top: 20px;
-  padding: 15px;
+  padding: 20px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   background-color: #f9f9f9;
 }
 
-/* Ajout du style pour l’aperçu de l’image */
 .image-preview {
   display: block;
   max-width: 100%;
   height: auto;
   margin-top: 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 5px;
   background-color: #fff;
+}
+
+/* Style amélioré pour l'affichage des symptômes */
+.symptom-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.symptom-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.symptom-list label:hover {
+  background: #e9f5ff;
+}
+
+.symptom-list input[type="checkbox"] {
+  transform: scale(1.2);
 }
