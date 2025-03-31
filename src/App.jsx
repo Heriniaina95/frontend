@@ -12,6 +12,8 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showSymptomSelection, setShowSymptomSelection] = useState(false);
+  const [measures, setMeasures] = useState(null); // État pour les mesures à prendre
+  const [showMeasuresButton, setShowMeasuresButton] = useState(false); // État pour afficher le bouton "Mesures à prendre"
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -21,7 +23,9 @@ const App = () => {
       setPrediction(null);
       setDiseaseInfo(null);
       setError(null);
-      setShowSymptomSelection(false); // Réinitialiser l'affichage des symptômes
+      setShowSymptomSelection(false);
+      setMeasures(null); // Réinitialiser les mesures
+      setShowMeasuresButton(false); // Réinitialiser l'affichage du bouton
     }
   };
 
@@ -64,7 +68,9 @@ const App = () => {
     try {
       const response = await axios.post('http://localhost:5000/predict-disease', { symptoms });
       setPrediction(response.data.predicted_disease);
-      setDiseaseInfo(null); // Réinitialiser les informations de la maladie
+      setDiseaseInfo(null);
+      setMeasures(null); // Réinitialiser les mesures
+      setShowMeasuresButton(true); // Afficher le bouton "Mesures à prendre"
     } catch (error) {
       console.error('Erreur lors de la prédiction de la maladie:', error);
     }
@@ -76,6 +82,15 @@ const App = () => {
       setSymptomList(response.data.symptoms);
     } catch (error) {
       console.error('Erreur lors de la récupération des symptômes:', error);
+    }
+  };
+
+  const fetchMeasures = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/get_measurements?disease=${prediction}`);
+      setMeasures(response.data.data);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des mesures:', error);
     }
   };
 
@@ -148,6 +163,24 @@ const App = () => {
             </label>
           ))}
           <button onClick={handlePredictDisease} className="btn-predict">Prédire la maladie</button>
+        </div>
+      )}
+
+      {prediction && showMeasuresButton && (
+        <div className="measures-section">
+          <button onClick={fetchMeasures} className="btn-more-details">
+            Mesures à prendre
+          </button>
+          {measures && (
+            <div className="measures">
+              <h3>Mesures à prendre :</h3>
+              <ul>
+                {measures.map((measure, index) => (
+                  <li key={index}>{measure}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>
