@@ -1,114 +1,144 @@
-.App {
+/* App.css */
+
+body {
+  margin: 0;
+  padding: 0;
   font-family: 'Poppins', sans-serif;
-  color: #333;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  background-color: #f4f7fc;
+  background: #f5f8fa;
+  color: #2c3e50;
+}
+
+.App {
+  text-align: center;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 2.5rem;
+  color: #1abc9c;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.8rem;
+  color: #16a085;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+  font-weight: 600;
+}
+
+.section {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  width: 90%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+input, select {
+  width: 100%;
+  padding: 0.8rem;
+  margin-top: 0.8rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #ced6e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus {
+  border-color: #1abc9c;
+  outline: none;
+  box-shadow: 0 0 5px rgba(26, 188, 156, 0.5);
+}
+
+button {
+  background-color: #1abc9c;
+  color: #ffffff;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem;
+}
+
+button:hover {
+  background-color: #16a085;
+}
+
+.image-preview {
+  margin-top: 1rem;
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
 .background-image {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: url('/background.jpg') no-repeat center center;
-  background-size: cover;
-  opacity: 0.2;
+  background: url('https://images.unsplash.com/photo-1588776814546-2c70290d6e48?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+  opacity: 0.05;
   z-index: -1;
 }
 
-h1 {
-  color: #28a745;
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 2rem;
+/* Loading / Error messages */
+.loading, .error {
+  font-size: 1.2rem;
+  margin-top: 1rem;
 }
 
-.section {
-  margin-bottom: 20px;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.loading {
+  color: #3498db;
 }
 
-.form-group {
-  margin-bottom: 15px;
+.error {
+  color: #e74c3c;
 }
 
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.btn-predict {
-  background-color: #007bff;
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
-}
-
-.btn-predict:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-.result {
-  margin-top: 20px;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background-color: #f9f9f9;
-}
-
-.image-preview {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin-top: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 5px;
-  background-color: #fff;
-}
-
-/* Style amélioré pour l'affichage des symptômes */
+/* Symptom checklist */
 .symptom-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  justify-content: center;
+  margin-top: 1rem;
 }
 
 .symptom-list label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  background-color: #ecf0f1;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  margin: 0.3rem;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background-color 0.3s;
 }
 
 .symptom-list label:hover {
-  background: #e9f5ff;
+  background-color: #d1f2eb;
 }
 
 .symptom-list input[type="checkbox"] {
-  transform: scale(1.2);
+  margin-right: 0.5rem;
+}
+
+/* Measures and Prediction Sections */
+.prediction, .measures {
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.prediction span, .measures span {
+  font-weight: bold;
+  color: #16a085;
 }
